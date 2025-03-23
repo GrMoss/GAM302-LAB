@@ -5,20 +5,32 @@ using UnityEngine.InputSystem;
 public class PlayerController : NetworkBehaviour
 {
     [SerializeField] private InputActionReference moveActionToUse;
-
     [SerializeField] private float speed = 5f;
+    [SerializeField] private float maxHealth = 100f;
 
     private Rigidbody2D myRigidbody2D;
-    private Vector2 moveDirection;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
-    private bool isRight = true;
+
+    [Networked] 
+    private Vector2 MoveDirection { get; set; }
+    [Networked] 
+    private bool IsFacingRight { get; set; }
+    [Networked] 
+    public float Health { get; set; }
 
     private void Awake()
     {
         myRigidbody2D = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        spriteRenderer = GetComponent<SpriteRenderer>(); // Lấy SpriteRenderer
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    public override void Spawned()
+    {
+        IsFacingRight = true;
+        MoveDirection = Vector2.zero;
+        Health = maxHealth;
     }
 
     private void OnEnable()
@@ -33,38 +45,52 @@ public class PlayerController : NetworkBehaviour
 
     private void Update()
     {
+        if (!HasStateAuthority) return;
         Move();
     }
 
-    private void FixedUpdate()
+    public override void FixedUpdateNetwork()
     {
-        myRigidbody2D.velocity = moveDirection * speed;
+        myRigidbody2D.velocity = MoveDirection * speed;
+    }
+
+    public override void Render()
+    {
+        spriteRenderer.flipX = !IsFacingRight;
+        animator.SetFloat("Speed", MoveDirection.magnitude);
     }
 
     private void Move()
     {
-        moveDirection = moveActionToUse.action.ReadValue<Vector2>();
-        Anim();
-    }
-
-    private void Anim()
-    {
-        animator.SetFloat("Speed", moveDirection.magnitude); 
+        Vector2 newMoveDirection = moveActionToUse.action.ReadValue<Vector2>();
+        MoveDirection = newMoveDirection;
         Flip();
     }
 
     private void Flip()
     {
-        // Lật nhân vật dựa trên hướng di chuyển
-        if (moveDirection.x > 0 && !isRight)
+        if (MoveDirection.x > 0 && !IsFacingRight)
         {
-            isRight = true;
-            spriteRenderer.flipX = false; 
+            IsFacingRight = true;
         }
-        else if (moveDirection.x < 0 && isRight)
+        else if (MoveDirection.x < 0 && IsFacingRight)
         {
-            isRight = false;
-            spriteRenderer.flipX = true; 
+            IsFacingRight = false;
         }
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (!HasStateAuthority) return;
+        Health = Mathf.Max(Health - damage, 0);
+        if (Health <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        Runner.Despawn(Object);
     }
 }

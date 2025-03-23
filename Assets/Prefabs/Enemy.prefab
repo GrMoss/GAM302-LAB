@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 440196642677856245}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.005, z: 0}
+  m_LocalPosition: {x: 0, y: -0.468, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -72,7 +72,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -1
+  m_SortingOrder: 0
   m_Sprite: {fileID: 1304559308, guid: 0d5e657ee5a074e4baa53d5b248a01d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -99,6 +99,7 @@ GameObject:
   - component: {fileID: 4368771230785596234}
   - component: {fileID: 748417687315518175}
   - component: {fileID: 7486791971418893228}
+  - component: {fileID: 1259971963852141934}
   m_Layer: 6
   m_Name: Enemy
   m_TagString: Enemy
@@ -140,6 +141,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 7409441085503725249}
+  - {fileID: 1259971963852141934}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &7409441085503725249
 MonoBehaviour:
@@ -198,7 +200,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_Sprite: {fileID: -493647738, guid: 3bcb7877229a5334da528f2f0872b5c3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -209,7 +211,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
-  m_SpriteSortPoint: 1
+  m_SpriteSortPoint: 0
 --- !u!95 &4368771230785596234
 Animator:
   serializedVersion: 5
@@ -265,7 +267,7 @@ CapsuleCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4151640467828869829}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -293,3 +295,20 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.486993}
   m_Size: {x: 0.7, y: 0.90563023}
   m_Direction: 0
+--- !u!114 &1259971963852141934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4151640467828869829}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10a25832e052e41ce88d515f1427c015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 50
+  detectionRange: 10
+  moveSpeed: 3
+  stoppingDistance: 2
+  _Health: 0
