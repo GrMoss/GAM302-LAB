@@ -101379,6 +101379,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7409441085503725249, guid: eb8a1d1cd0e804577a2368d7e307b1f1, type: 3}
+      propertyPath: DisableSharedModeInterpolation
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

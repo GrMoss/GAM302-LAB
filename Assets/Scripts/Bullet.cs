@@ -1,13 +1,20 @@
 using Fusion;
 using UnityEngine;
 
-[RequireComponent(typeof(NetworkTransform))] // Thêm NetworkTransform để nội suy vị trí
 public class Bullet : NetworkBehaviour
 {
     [Networked] 
     private Vector2 Direction { get; set; }
     [Networked] 
-    private float Speed { get; set; }
+    private float Speed { get; set; } 
+
+    public override void Spawned()
+    {
+        if (HasStateAuthority)
+        {
+            transform.position += (Vector3)(Direction * Speed * Runner.DeltaTime);
+        }
+    }
 
     public void Initialize(Vector2 direction, float bulletSpeed)
     {
@@ -19,13 +26,7 @@ public class Bullet : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        // Di chuyển đạn trong FixedUpdateNetwork để đồng bộ với tick mạng
         transform.position += (Vector3)(Direction * Speed * Runner.DeltaTime);
-    }
-
-    public override void Render()
-    {
-        // Để trống Render, NetworkTransform sẽ xử lý nội suy hiển thị
     }
 
     private void OnTriggerEnter2D(Collider2D other)
