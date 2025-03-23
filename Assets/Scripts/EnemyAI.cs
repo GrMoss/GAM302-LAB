@@ -4,52 +4,105 @@ using UnityEngine;
 public class EnemyAI : NetworkBehaviour
 {
     [SerializeField] private float maxHealth = 50f;
-    [SerializeField] private float detectionRange = 10f; // Phạm vi phát hiện người chơi
-    [SerializeField] private float moveSpeed = 3f; // Tốc độ di chuyển
-    [SerializeField] private float stoppingDistance = 2f; // Khoảng cách dừng lại trước người chơi
+    [SerializeField] private float detectionRange = 10f;
+    [SerializeField] private float speed = 3f;
+    [SerializeField] private float stoppingDistance = 0.5f;
+    [SerializeField] private float targetCheckInterval = 0.5f;
+    [SerializeField] private float deathDelay = 1f;
 
     private SpriteRenderer spriteRenderer;
-    private Transform target; // Mục tiêu là người chơi gần nhất
+    private Animator animator;
+    private new Rigidbody2D rigidbody2D;
+    private new Collider2D collider2D;
+    private Transform target;
+    private float lastTargetCheckTime;
+    private PlayerController[] players;
+    private bool isLive;
+    private float deathTimer;
 
-    [Networked] 
-    public float Health { get; set; }
-    [Networked] 
-    private bool IsFacingRight { get; set; }
-    [Networked] 
-    private Vector2 MoveDirection { get; set; } // Hướng di chuyển đồng bộ qua mạng
+    [Networked] public float Health { get; set; }
+    [Networked] private bool IsFacingRight { get; set; }
+    [Networked] private bool IsHit { get; set; }
+    [Networked] private bool IsDead { get; set; }
 
     public override void Spawned()
     {
         Health = maxHealth;
         IsFacingRight = true;
+        isLive = true;
+        IsHit = false;
+        IsDead = false;
+        deathTimer = 0f;
+
         spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+        rigidbody2D = GetComponent<Rigidbody2D>();
+        collider2D = GetComponent<Collider2D>();
+
+        if (spriteRenderer == null) Debug.LogError("Missing SpriteRenderer on EnemyAI!", this);
+        if (animator == null) Debug.LogError("Missing Animator on EnemyAI!", this);
+        if (rigidbody2D == null) Debug.LogError("Missing Rigidbody2D on EnemyAI!", this);
+        if (collider2D == null) Debug.LogError("Missing Collider2D on EnemyAI!", this);
+
+        players = FindObjectsOfType<PlayerController>();
+        lastTargetCheckTime = Runner.SimulationTime;
+
+        collider2D.enabled = true;
+        rigidbody2D.simulated = true;
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (HasStateAuthority)
+        if (!HasStateAuthority || !isLive) return;
+
+        if (Runner.SimulationTime - lastTargetCheckTime >= targetCheckInterval)
         {
             FindTarget();
-            MoveToTarget();
+            lastTargetCheckTime = Runner.SimulationTime;
         }
 
-        // Di chuyển kẻ địch dựa trên MoveDirection
-        transform.position += (Vector3)(MoveDirection * moveSpeed * Runner.DeltaTime);
+        MoveToTarget();
+
+        if (IsDead)
+        {
+            deathTimer += Runner.DeltaTime;
+            if (deathTimer >= deathDelay)
+            {
+                Runner.Despawn(Object);
+            }
+        }
     }
 
     public override void Render()
     {
-        spriteRenderer.flipX = !IsFacingRight; // Đồng bộ lật sprite trên tất cả client
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.flipX = !IsFacingRight;
+        }
+        if (animator != null)
+        {
+            animator.SetBool("Dead", IsDead);
+            if (IsHit)
+            {
+                animator.SetTrigger("Hit");
+                IsHit = false;
+            }
+        }
     }
 
     private void FindTarget()
     {
-        PlayerController[] players = FindObjectsOfType<PlayerController>();
+        if (players == null || players.Length == 0)
+        {
+            players = FindObjectsOfType<PlayerController>();
+        }
+
         float closestDistance = float.MaxValue;
         Transform closestTarget = null;
 
         foreach (PlayerController player in players)
         {
+            if (player == null || !player.Object.IsValid) continue;
             float distance = Vector2.Distance(transform.position, player.transform.position);
             if (distance < closestDistance && distance <= detectionRange)
             {
@@ -62,42 +115,35 @@ public class EnemyAI : NetworkBehaviour
 
     private void MoveToTarget()
     {
-        if (target != null)
+        if (target != null && target.gameObject.activeInHierarchy && isLive)
         {
-            Vector2 targetPos = target.position;
-            float distanceToTarget = Vector2.Distance(transform.position, targetPos);
+            if (animator != null && animator.GetCurrentAnimatorStateInfo(0).IsName("Hit")) return;
 
-            // Nếu chưa đến khoảng cách dừng, di chuyển về phía người chơi
+            Vector2 dirVec = (Vector2)target.position - rigidbody2D.position; // Ép kiểu Vector3 sang Vector2
+            float distanceToTarget = dirVec.magnitude;
+
             if (distanceToTarget > stoppingDistance)
             {
-                MoveDirection = (targetPos - (Vector2)transform.position).normalized;
-            }
-            else
-            {
-                MoveDirection = Vector2.zero; // Dừng lại khi đủ gần
+                Vector2 nextVec = dirVec.normalized * speed * Runner.DeltaTime;
+                rigidbody2D.MovePosition(rigidbody2D.position + nextVec);
+                rigidbody2D.velocity = Vector2.zero;
             }
 
-            // Cập nhật hướng lật dựa trên hướng di chuyển
-            if (MoveDirection.x > 0 && !IsFacingRight)
-            {
-                IsFacingRight = true;
-            }
-            else if (MoveDirection.x < 0 && IsFacingRight)
-            {
-                IsFacingRight = false;
-            }
-        }
-        else
-        {
-            MoveDirection = Vector2.zero; // Không có mục tiêu thì đứng yên
+            IsFacingRight = target.position.x > rigidbody2D.position.x;
         }
     }
 
     public void TakeDamage(float damage)
     {
-        if (!HasStateAuthority) return;
+        if (!HasStateAuthority || !isLive) return;
+
         Health = Mathf.Max(Health - damage, 0);
-        if (Health <= 0)
+        if (Health > 0)
+        {
+            IsHit = true;
+            RPC_KnockBack(transform.position, target != null ? target.position : transform.position);
+        }
+        else
         {
             Die();
         }
@@ -105,6 +151,26 @@ public class EnemyAI : NetworkBehaviour
 
     private void Die()
     {
-        Runner.Despawn(Object);
+        if (!HasStateAuthority) return;
+
+        isLive = false;
+        IsDead = true;
+        collider2D.enabled = false;
+        rigidbody2D.simulated = false;
+
+        if (Runner.IsServer)
+        {
+            Debug.Log($"Enemy {Object.Id} died!");
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_KnockBack(Vector3 enemyPos, Vector3 targetPos)
+    {
+        if (rigidbody2D != null)
+        {
+            Vector2 dirVec = (Vector2)enemyPos - (Vector2)targetPos;
+            rigidbody2D.AddForce(dirVec.normalized * 3f, ForceMode2D.Impulse);
+        }
     }
 }

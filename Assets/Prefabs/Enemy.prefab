@@ -310,5 +310,5 @@ MonoBehaviour:
   maxHealth: 50
   detectionRange: 10
   moveSpeed: 3
-  stoppingDistance: 2
+  stoppingDistance: 0.5
   _Health: 0

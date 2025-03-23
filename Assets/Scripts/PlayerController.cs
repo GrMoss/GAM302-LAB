@@ -93,4 +93,13 @@ public class PlayerController : NetworkBehaviour
     {
         Runner.Despawn(Object);
     }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!HasStateAuthority) return;
+        if (other.CompareTag("Enemy"))
+        {
+            TakeDamage(10f); // Thêm sát thương khi va chạm với enemy
+        }
+    }
 }
