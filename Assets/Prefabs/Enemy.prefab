@@ -516,6 +516,8 @@ MonoBehaviour:
   targetCheckInterval: 0.5
   deathDelay: 5
   contactDamage: 10
+  wanderSpeed: 1.5
+  wanderRadius: 5
   healthSlider: {fileID: 5184214293643502218}
   _Health: 50
 --- !u!1 &5717690516561533933
@@ -764,7 +766,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_TargetDisplay: 0
 --- !u!114 &8258124017825875717
 MonoBehaviour:
