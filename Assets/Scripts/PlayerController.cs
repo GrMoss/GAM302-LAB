@@ -6,7 +6,6 @@ public class PlayerController : NetworkBehaviour
 {
     [SerializeField] private InputActionReference moveActionToUse;
     [SerializeField] private float speed = 5f;
-    [SerializeField] private float maxHealth = 100f;
 
     private Rigidbody2D myRigidbody2D;
     private Animator animator;
@@ -16,8 +15,6 @@ public class PlayerController : NetworkBehaviour
     private Vector2 MoveDirection { get; set; }
     [Networked] 
     private bool IsFacingRight { get; set; }
-    [Networked] 
-    public float Health { get; set; }
 
     private void Awake()
     {
@@ -30,7 +27,6 @@ public class PlayerController : NetworkBehaviour
     {
         IsFacingRight = true;
         MoveDirection = Vector2.zero;
-        Health = maxHealth;
     }
 
     private void OnEnable()
@@ -76,30 +72,6 @@ public class PlayerController : NetworkBehaviour
         else if (MoveDirection.x < 0 && IsFacingRight)
         {
             IsFacingRight = false;
-        }
-    }
-
-    public void TakeDamage(float damage)
-    {
-        if (!HasStateAuthority) return;
-        Health = Mathf.Max(Health - damage, 0);
-        if (Health <= 0)
-        {
-            Die();
-        }
-    }
-
-    private void Die()
-    {
-        Runner.Despawn(Object);
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (!HasStateAuthority) return;
-        if (other.CompareTag("Enemy"))
-        {
-            TakeDamage(10f); // Thêm sát thương khi va chạm với enemy
         }
     }
 }

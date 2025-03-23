@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: 896009080796932987}
   - component: {fileID: 6975822354611178346}
   - component: {fileID: 4491061598245828921}
+  - component: {fileID: 8610813595762509818}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -164,6 +165,7 @@ MonoBehaviour:
   - {fileID: 8925964883331046178}
   - {fileID: 6975822354611178346}
   - {fileID: 4491061598245828921}
+  - {fileID: 8610813595762509818}
   ForceRemoteRenderTimeframe: 0
 --- !u!212 &4475155260285061199
 SpriteRenderer:
@@ -323,8 +325,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveActionToUse: {fileID: -2141462297090898550, guid: 7a401a75e2e631d49be12c3a6f9c8140, type: 3}
   speed: 5
-  maxHealth: 100
-  _Health: 100
 --- !u!95 &896009080796932987
 Animator:
   serializedVersion: 5
@@ -381,3 +381,17 @@ MonoBehaviour:
   bulletSpeed: 10
   fireRate: 3
   bulletDamage: 20
+--- !u!114 &8610813595762509818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7189732288102112542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3563bed7dfd7443198579b17cb23c197, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  _Health: 100
