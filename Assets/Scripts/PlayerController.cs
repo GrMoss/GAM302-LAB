@@ -4,26 +4,67 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : NetworkBehaviour
 {
-    public float moveSpeed = 5f;
-    private Vector2 moveInput;
-    private Rigidbody2D rb;
-    private PlayerInput playerInput;
+    [SerializeField] private InputActionReference moveActionToUse;
+
+    [SerializeField] private float speed = 5f;
+
+    private Rigidbody2D myRigidbody2D;
+    private Vector2 moveDirection;
+    private Animator animator;
+    private SpriteRenderer spriteRenderer;
+    private bool isRight = true;
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
-        playerInput = GetComponent<PlayerInput>();
+        myRigidbody2D = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>(); // Lấy SpriteRenderer
     }
 
-    public void OnMove(InputValue value)
+    private void OnEnable()
     {
-        if (!Object.HasInputAuthority) return; // Chỉ điều khiển player của chính mình
+        moveActionToUse.action.Enable();
+    }
 
-        moveInput = value.Get<Vector2>().normalized;
+    private void OnDisable()
+    {
+        moveActionToUse.action.Disable();
+    }
+
+    private void Update()
+    {
+        Move();
     }
 
     private void FixedUpdate()
     {
-        rb.velocity = moveInput * moveSpeed;
+        myRigidbody2D.velocity = moveDirection * speed;
+    }
+
+    private void Move()
+    {
+        moveDirection = moveActionToUse.action.ReadValue<Vector2>();
+        Anim();
+    }
+
+    private void Anim()
+    {
+        animator.SetFloat("Speed", moveDirection.magnitude); 
+        Flip();
+    }
+
+    private void Flip()
+    {
+        // Lật nhân vật dựa trên hướng di chuyển
+        if (moveDirection.x > 0 && !isRight)
+        {
+            isRight = true;
+            spriteRenderer.flipX = false; 
+        }
+        else if (moveDirection.x < 0 && isRight)
+        {
+            isRight = false;
+            spriteRenderer.flipX = true; 
+        }
     }
 }
