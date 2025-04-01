@@ -24,7 +24,7 @@ public class ChatUI : MonoBehaviour
     }
 
     private void Start()
-    {
+    { 
         if (sendButton != null)
         {
             sendButton.onClick.AddListener(Send);

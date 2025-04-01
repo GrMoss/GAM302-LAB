@@ -101827,7 +101827,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 490644531}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9a70cb5a41b3d4ccea658faafa9e2e6e, type: 3}
   m_Name: 
@@ -107645,5 +107645,5 @@ SceneRoots:
   - {fileID: 970172007}
   - {fileID: 8401913478145884422}
   - {fileID: 1683074720}
-  - {fileID: 490644535}
   - {fileID: 487722697}
+  - {fileID: 490644535}
