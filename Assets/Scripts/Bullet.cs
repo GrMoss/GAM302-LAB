@@ -13,7 +13,7 @@ public class Bullet : NetworkBehaviour
     [SerializeField] 
     private float lifetime = 5f;
     [SerializeField]
-    private float damage = 20f; // Thêm thuộc tính damage để rõ ràng
+    private float damage = 20f; 
 
     public override void Spawned()
     {
@@ -52,7 +52,7 @@ public class Bullet : NetworkBehaviour
             EnemyAI enemy = other.GetComponent<EnemyAI>();
             if (enemy != null)
             {
-                enemy.TakeDamage(damage); // Dùng thuộc tính damage
+                enemy.TakeDamage(damage); 
             }
             Runner.Despawn(Object);
         }

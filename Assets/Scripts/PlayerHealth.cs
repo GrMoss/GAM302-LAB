@@ -10,14 +10,12 @@ public class PlayerHealth : NetworkBehaviour
     public float Health { get; set; }
 
     [Header("UI")]
-    [SerializeField] private Slider healthSlider; // Slider đồng bộ cho tất cả client
-    [SerializeField] private Image playerIcon;    // Image chỉ hiển thị cho người chơi sở hữu
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private Image playerIcon;  
 
     public override void Spawned()
     {
         Health = maxHealth;
-
-        // Tìm Slider và Image nếu chưa gán trong Inspector
         if (healthSlider == null)
         {
             healthSlider = GetComponentInChildren<Slider>();
@@ -36,15 +34,13 @@ public class PlayerHealth : NetworkBehaviour
             }
         }
 
-        // Thiết lập Slider (hiển thị trên tất cả client)
         if (healthSlider != null)
         {
             healthSlider.maxValue = maxHealth;
             healthSlider.value = Health;
-            healthSlider.gameObject.SetActive(true); // Luôn hiển thị Slider
+            healthSlider.gameObject.SetActive(true); 
         }
 
-        // Thiết lập Image (chỉ hiển thị cho người chơi sở hữu)
         if (playerIcon != null)
         {
             playerIcon.gameObject.SetActive(HasInputAuthority);
@@ -82,22 +78,20 @@ public class PlayerHealth : NetworkBehaviour
 
     public override void Render()
     {
-        // Cập nhật Slider (đồng bộ cho tất cả client)
         if (healthSlider != null)
         {
             healthSlider.value = Health;
         }
 
-        // Cập nhật Image (chỉ cho người chơi sở hữu)
         if (playerIcon != null && HasInputAuthority)
         {
-            if (Health <= maxHealth * 0.3f) // Dưới 30% máu thì đổi màu đỏ
+            if (Health <= maxHealth * 0.3f) 
             {
                 playerIcon.color = Color.red;
             }
             else
             {
-                playerIcon.color = Color.white; // Màu mặc định
+                playerIcon.color = Color.white; 
             }
         }
     }

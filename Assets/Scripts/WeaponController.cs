@@ -31,6 +31,9 @@ public class WeaponController : NetworkBehaviour
 
     private void SpawnBullet(Vector2 direction)
     {
+        // tuy chinh duong dan 
+        
+
         NetworkObject bullet = Runner.Spawn(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity, Object.InputAuthority);
         Bullet bulletScript = bullet.GetComponent<Bullet>();
         bulletScript.Initialize(direction, bulletSpeed);

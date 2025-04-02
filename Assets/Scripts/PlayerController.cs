@@ -13,7 +13,7 @@ public class PlayerController : NetworkBehaviour
 
     [Networked] private Vector2 MoveDirection { get; set; }
     [Networked] private bool IsFacingRight { get; set; }
-    [Networked] public NetworkBool IsAlive { get; set; } = true; // Thay đổi thành public
+    [Networked] public NetworkBool IsAlive { get; set; } = true;
 
     private void Awake()
     {
@@ -55,7 +55,6 @@ public class PlayerController : NetworkBehaviour
     {
         if (HasInputAuthority && IsAlive)
         {
-            // Client sở hữu gửi input
             Vector2 newMoveDirection = moveActionToUse.action.ReadValue<Vector2>();
             MoveDirection = newMoveDirection;
             Flip();
@@ -63,7 +62,6 @@ public class PlayerController : NetworkBehaviour
 
         if (HasStateAuthority)
         {
-            // Server cập nhật vị trí
             if (IsAlive)
             {
                 myRigidbody2D.velocity = MoveDirection * speed;
@@ -80,7 +78,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsAlive)
         {
-            spriteRenderer.enabled = false; // Ẩn sprite khi chết
+            spriteRenderer.enabled = false; 
             return;
         }
 
