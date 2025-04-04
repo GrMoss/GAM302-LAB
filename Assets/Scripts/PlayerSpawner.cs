@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
 {
-    public GameObject playerPrefab;
+    public GameObject[] playerPrefab;
     public CinemachineVirtualCamera virtualCamera;
 
     private void UpdateVirtualCameraTarget(Transform playerTransform)
@@ -29,13 +29,15 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
                 Debug.LogError("PlayerPrefab or VirtualCamera is not assigned!");
                 return;
             }
+            int playerIndex = LoginManager.indexPlayer;
 
             Vector2 randomPosition = new Vector2(Random.Range(-5f, 5f), Random.Range(-5f, 5f));
-            NetworkObject spawnedPlayer = Runner.Spawn(playerPrefab, randomPosition, Quaternion.identity, player);
+            NetworkObject spawnedPlayer = Runner.Spawn(playerPrefab[playerIndex], randomPosition, Quaternion.identity, player);
 
             if (spawnedPlayer != null)
             {
                 UpdateVirtualCameraTarget(spawnedPlayer.transform);
+                SceneLoader.continueLoading = true;
             }
             else
             {
