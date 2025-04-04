@@ -1,28 +1,71 @@
 using Fusion;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerHealth : NetworkBehaviour
 {
     [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private int maxLives = 3;
+    [SerializeField] private float respawnDelay = 3f;
 
-    [Networked]
-    public float Health { get; set; }
+    [Networked] public float Health { get; set; }
+    [Networked] public bool IsDead { get; set; }
+    [Networked] public bool IsRespawning { get; set; }
 
     [Header("UI")]
-    [SerializeField] private Slider healthSlider;
-    [SerializeField] private Image playerIcon;  
+    [SerializeField] private GameObject healthBar;
+    [SerializeField] private Image playerIcon;
+    [SerializeField] private GameObject losePanel;
+    [SerializeField] private TMP_Text livesText;
+
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+
+    private int localLives;
+    private Slider healthSlider;
+    private PlayerController playerController; // Thêm tham chiếu đến PlayerController
 
     public override void Spawned()
     {
         Health = maxHealth;
-        if (healthSlider == null)
+        IsDead = false;
+        IsRespawning = false;
+        localLives = maxLives;
+
+        playerController = GetComponent<PlayerController>(); // Lấy PlayerController
+
+        if (animator == null)
         {
-            healthSlider = GetComponentInChildren<Slider>();
+            animator = GetComponent<Animator>();
+            if (animator == null)
+            {
+                Debug.LogWarning($"Player {Object.Id}: Không tìm thấy Animator!");
+            }
+        }
+
+        if (animator != null)
+        {
+            animator.SetBool("Dead", false);
+        }
+
+        if (healthBar == null)
+        {
+            Debug.LogWarning($"Player {Object.Id}: Không tìm thấy healthBar!");
+        }
+        else
+        {
+            healthSlider = healthBar.GetComponentInChildren<Slider>();
             if (healthSlider == null)
             {
-                Debug.LogWarning($"Player {Object.Id}: Không tìm thấy Slider trong hierarchy!");
+                Debug.LogWarning($"Player {Object.Id}: Không tìm thấy Slider trong healthBar!");
             }
+            else
+            {
+                healthSlider.maxValue = maxHealth;
+                healthSlider.value = Health;
+            }
+            healthBar.SetActive(true);
         }
 
         if (playerIcon == null)
@@ -34,27 +77,160 @@ public class PlayerHealth : NetworkBehaviour
             }
         }
 
-        if (healthSlider != null)
-        {
-            healthSlider.maxValue = maxHealth;
-            healthSlider.value = Health;
-            healthSlider.gameObject.SetActive(true); 
-        }
-
         if (playerIcon != null)
         {
             playerIcon.gameObject.SetActive(HasInputAuthority);
+        }
+
+        if (losePanel != null)
+        {
+            losePanel.SetActive(false);
+        }
+
+        if (livesText == null)
+        {
+            Debug.LogWarning($"Player {Object.Id}: Không tìm thấy livesText!");
+        }
+        else
+        {
+            livesText.text = $"{localLives}";
+            livesText.gameObject.SetActive(true);
         }
     }
 
     public void TakeDamage(float damage)
     {
-        Debug.Log($"Player {Object.Id} took {damage} damage!");
         if (!HasStateAuthority) return;
+
+        Debug.Log($"Player {Object.Id} took {damage} damage!");
         Health = Mathf.Max(Health - damage, 0);
-        if (Health <= 0)
+
+        if (Health <= 0 && !IsRespawning)
         {
-            Die();
+            Rpc_UpdateLifeAndRespawn();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_UpdateLifeAndRespawn()
+    {
+        localLives--;
+
+        if (HasStateAuthority)
+        {
+            if (localLives > 0)
+            {
+                Rpc_StartRespawn();
+                Debug.Log($"Player {Object.Id} lost a life, {localLives} lives remaining, respawning...");
+            }
+            else
+            {
+                IsDead = true;
+                Rpc_NotifyGameOver();
+                Invoke(nameof(Die), 0.5f);
+                Debug.Log($"Player {Object.Id} has no lives left!");
+            }
+        }
+
+        if (livesText != null)
+        {
+            livesText.text = $"{localLives}";
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_NotifyGameOver()
+    {
+        if (HasInputAuthority && losePanel != null)
+        {
+            losePanel.SetActive(true);
+            Debug.Log($"Player {Object.Id} lost the game!");
+        }
+
+        if (animator != null)
+        {
+            animator.SetBool("Dead", true);
+        }
+
+        if (healthBar != null)
+        {
+            healthBar.SetActive(false);
+        }
+
+        if (livesText != null)
+        {
+            livesText.text = "0";
+        }
+
+        if (playerController != null)
+        {
+            playerController.RPC_Die(); // Gọi RPC_Die khi hết mạng
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_StartRespawn()
+    {
+        IsRespawning = true;
+        Health = 0;
+
+        if (animator != null)
+        {
+            animator.SetBool("Dead", true);
+        }
+
+        if (healthBar != null)
+        {
+            healthBar.SetActive(false);
+        }
+
+        if (playerController != null)
+        {
+            playerController.RPC_Die(); // Gọi RPC_Die khi bắt đầu respawn
+        }
+
+        if (HasStateAuthority)
+        {
+            Invoke(nameof(Respawn), respawnDelay);
+        }
+    }
+
+    private void Respawn()
+    {
+        if (HasStateAuthority)
+        {
+            Health = maxHealth;
+            IsRespawning = false;
+            Rpc_CompleteRespawn();
+            Debug.Log($"Player {Object.Id} respawned with {Health} health!");
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_CompleteRespawn()
+    {
+        if (animator != null)
+        {
+            animator.SetBool("Dead", false);
+        }
+
+        if (healthBar != null)
+        {
+            healthBar.SetActive(true);
+            if (healthSlider != null)
+            {
+                healthSlider.value = Health;
+            }
+        }
+
+        if (livesText != null)
+        {
+            livesText.text = $"{localLives}";
+        }
+
+        if (playerController != null)
+        {
+            playerController.RPC_Respawn(); // Gọi RPC_Respawn khi sống lại
         }
     }
 
@@ -62,9 +238,9 @@ public class PlayerHealth : NetworkBehaviour
     {
         if (Runner.IsServer)
         {
-            Debug.Log($"Player {Object.Id} died!");
+            Debug.Log($"Player {Object.Id} died and is despawned!");
+            Runner.Despawn(Object);
         }
-        Runner.Despawn(Object);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -78,20 +254,20 @@ public class PlayerHealth : NetworkBehaviour
 
     public override void Render()
     {
-        if (healthSlider != null)
+        if (healthSlider != null && !IsRespawning && !IsDead)
         {
             healthSlider.value = Health;
         }
 
         if (playerIcon != null && HasInputAuthority)
         {
-            if (Health <= maxHealth * 0.3f) 
+            if (Health <= maxHealth * 0.3f)
             {
                 playerIcon.color = Color.red;
             }
             else
             {
-                playerIcon.color = Color.white; 
+                playerIcon.color = Color.white;
             }
         }
     }

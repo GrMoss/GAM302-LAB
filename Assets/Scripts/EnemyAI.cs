@@ -129,6 +129,16 @@ public class EnemyAI : NetworkBehaviour
     {
         if (IsDead) return;
 
+        // Kiểm tra nếu target là người chơi và người chơi đã chết hoặc đang respawn
+        if (target != null)
+        {
+            PlayerHealth targetHealth = target.GetComponent<PlayerHealth>();
+            if (targetHealth != null && (targetHealth.IsDead || targetHealth.IsRespawning))
+            {
+                target = null; // Hủy mục tiêu nếu người chơi chết hoặc đang respawn
+            }
+        }
+
         if (target != null && target.gameObject.activeInHierarchy)
         {
             float distanceToTarget = Vector2.Distance(transform.position, target.position);
@@ -144,7 +154,7 @@ public class EnemyAI : NetworkBehaviour
         else
         {
             CurrentState = State.Wandering;
-            target = null;
+            target = null; // Đảm bảo target được hủy khi không còn hợp lệ
         }
     }
 
@@ -217,7 +227,12 @@ public class EnemyAI : NetworkBehaviour
 
         foreach (PlayerController player in players)
         {
-            if (player == null || !player.Object.IsValid || !player.gameObject.activeInHierarchy || !player.IsAlive) continue;
+            if (player == null || !player.Object.IsValid || !player.gameObject.activeInHierarchy) continue;
+
+            // Kiểm tra trạng thái của PlayerHealth
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth == null || playerHealth.IsDead || playerHealth.IsRespawning) continue;
+
             float distance = Vector2.Distance(transform.position, player.transform.position);
             if (distance < closestDistance && distance <= detectionRange)
             {

@@ -4,14 +4,15 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : NetworkBehaviour
 {
-    [SerializeField] private InputActionReference moveActionToUse;
     [SerializeField] private float speed = 5f;
 
     private Rigidbody2D myRigidbody2D;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
+    private PlayerHealth playerHealth;
 
-    [Networked] private Vector2 MoveDirection { get; set; }
+    private Vector2 moveInput;
+
     [Networked] private bool IsFacingRight { get; set; }
     [Networked] public NetworkBool IsAlive { get; set; } = true;
 
@@ -20,12 +21,13 @@ public class PlayerController : NetworkBehaviour
         myRigidbody2D = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        playerHealth = GetComponent<PlayerHealth>();
     }
 
     public override void Spawned()
     {
         IsFacingRight = true;
-        MoveDirection = Vector2.zero;
+        moveInput = Vector2.zero;
         IsAlive = true;
 
         if (myRigidbody2D != null)
@@ -35,65 +37,38 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    private void OnEnable()
+    public void OnMove(InputAction.CallbackContext context)
     {
-        if (moveActionToUse != null && moveActionToUse.action != null)
-        {
-            moveActionToUse.action.Enable();
-        }
+        if (!HasStateAuthority) return;
+        moveInput = context.ReadValue<Vector2>();
     }
 
-    private void OnDisable()
+    private void FixedUpdate()
     {
-        if (moveActionToUse != null && moveActionToUse.action != null)
+        if (!HasStateAuthority || !IsAlive)
         {
-            moveActionToUse.action.Disable();
-        }
-    }
-
-    public override void FixedUpdateNetwork()
-    {
-        if (HasInputAuthority && IsAlive)
-        {
-            Vector2 newMoveDirection = moveActionToUse.action.ReadValue<Vector2>();
-            MoveDirection = newMoveDirection;
-            Flip();
+            myRigidbody2D.velocity = Vector2.zero; // Dừng di chuyển khi không còn sống
+            return;
         }
 
-        if (HasStateAuthority)
-        {
-            if (IsAlive)
-            {
-                myRigidbody2D.velocity = MoveDirection * speed;
-            }
-            else
-            {
-                myRigidbody2D.velocity = Vector2.zero;
-                myRigidbody2D.simulated = false;
-            }
-        }
+        myRigidbody2D.velocity = moveInput * speed;
+        Flip();
     }
 
     public override void Render()
     {
-        if (!IsAlive)
-        {
-            spriteRenderer.enabled = false; 
-            return;
-        }
-
-        spriteRenderer.enabled = true;
+        // Không ẩn spriteRenderer khi chết, chỉ cập nhật animation và hướng
         spriteRenderer.flipX = !IsFacingRight;
-        animator.SetFloat("Speed", MoveDirection.magnitude);
+        animator.SetFloat("Speed", IsAlive ? moveInput.magnitude : 0f); // Dừng animation di chuyển khi chết
     }
 
     private void Flip()
     {
-        if (MoveDirection.x > 0 && !IsFacingRight)
+        if (moveInput.x > 0 && !IsFacingRight)
         {
             IsFacingRight = true;
         }
-        else if (MoveDirection.x < 0 && IsFacingRight)
+        else if (moveInput.x < 0 && IsFacingRight)
         {
             IsFacingRight = false;
         }
@@ -103,12 +78,25 @@ public class PlayerController : NetworkBehaviour
     public void RPC_Die()
     {
         IsAlive = false;
-        myRigidbody2D.simulated = false;
+        myRigidbody2D.simulated = false; // Vô hiệu hóa di chuyển
         myRigidbody2D.velocity = Vector2.zero;
 
         if (HasStateAuthority)
         {
             Debug.Log($"Player {Object.Id} died!");
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_Respawn()
+    {
+        IsAlive = true;
+        myRigidbody2D.simulated = true; // Kích hoạt lại di chuyển
+        myRigidbody2D.velocity = Vector2.zero;
+
+        if (HasStateAuthority)
+        {
+            Debug.Log($"Player {Object.Id} respawned and can move again!");
         }
     }
 }
