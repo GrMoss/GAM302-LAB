@@ -7,7 +7,6 @@ public class ChatManager : NetworkBehaviour, IChatService
     public static ChatManager Instance { get; private set; }
     
     private readonly List<string> messages = new List<string>();
-
     [SerializeField] private ChatUI chatUI;
 
     private void Awake()
@@ -25,7 +24,6 @@ public class ChatManager : NetworkBehaviour, IChatService
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RpcReceiveMessage(string playerName, string content)
     {
-        // Nối playerName và content với thẻ màu ngay tại đây
         string formattedMessage = $"<color=#73CFF5>{playerName}</color>: <color=#FFFFFF>{content}</color>";
         messages.Add(formattedMessage);
         chatUI?.AddMessage(formattedMessage);
@@ -33,11 +31,17 @@ public class ChatManager : NetworkBehaviour, IChatService
 
     public new void SendMessage(string content)
     {
-        string playerName = Runner.LocalPlayer.PlayerId.ToString();
+        if (Runner == null || Runner.LocalPlayer == null)
+        {
+            Debug.LogError("Runner hoặc LocalPlayer chưa được khởi tạo!");
+            return;
+        }
+
+        // Lấy tên người chơi từ LoginManager
+        string playerName = LoginManager.PlayerNameStatic ?? "Unknown";
         RpcReceiveMessage(playerName, content);
     }
 }
-
 public interface IChatService
 {
     void SendMessage(string content);

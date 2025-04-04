@@ -7,16 +7,15 @@ public class ChatUI : MonoBehaviour
 {
     [SerializeField] private TMP_InputField inputField;
     [SerializeField] private Button sendButton;
-    [SerializeField] private Transform chatContainer;           // Container for messages
-    [SerializeField] private GameObject messagePrefab;         // Prefab chung cho tin nhắn
-    [SerializeField] private int maxMessages = 50;             // Giới hạn tin nhắn
+    [SerializeField] private Transform chatContainer;
+    [SerializeField] private GameObject messagePrefab;
+    [SerializeField] private int maxMessages = 50;
 
     private IChatService chatService;
     private readonly List<GameObject> messageList = new List<GameObject>();
 
     private void Awake()
     {
-        chatService = ChatManager.Instance;
         if (messagePrefab == null)
         {
             Debug.LogError("messagePrefab chưa được gán trong Inspector!");
@@ -24,7 +23,7 @@ public class ChatUI : MonoBehaviour
     }
 
     private void Start()
-    { 
+    {
         if (sendButton != null)
         {
             sendButton.onClick.AddListener(Send);
@@ -37,6 +36,16 @@ public class ChatUI : MonoBehaviour
 
     private void Update()
     {
+        // Cố gắng lấy ChatManager.Instance nếu chưa có
+        if (chatService == null)
+        {
+            chatService = ChatManager.Instance;
+            if (chatService == null && Time.time > 1f) // Đợi 1 giây để tránh log liên tục
+            {
+                Debug.LogWarning("ChatManager.Instance vẫn chưa sẵn sàng!");
+            }
+        }
+
         if (inputField != null && Input.GetKeyDown(KeyCode.Return))
         {
             Send();
@@ -55,8 +64,18 @@ public class ChatUI : MonoBehaviour
         Debug.Log("Nội dung người dùng nhập: " + content);
         if (!string.IsNullOrEmpty(content))
         {
+            if (chatService == null)
+            {
+                chatService = ChatManager.Instance; // Thử lại lần cuối
+                if (chatService == null)
+                {
+                    Debug.LogError("Không thể gửi tin nhắn: ChatManager.Instance chưa sẵn sàng!");
+                    return;
+                }
+            }
             chatService.SendMessage(content);
             inputField.text = "";
+            inputField.ActivateInputField();
         }
     }
 
@@ -70,16 +89,15 @@ public class ChatUI : MonoBehaviour
 
         Debug.Log("Tin nhắn nhận được: " + formattedMessage);
 
-        // Spawn prefab chung cho toàn bộ tin nhắn
         GameObject newMessage = Instantiate(messagePrefab, chatContainer);
         TMP_Text textComponent = newMessage.GetComponentInChildren<TMP_Text>();
         
         if (textComponent != null)
         {
-            textComponent.richText = true;           // Bật rich text để hỗ trợ thẻ màu
-            textComponent.enableVertexGradient = false; // Tắt gradient để tránh xung đột
-            textComponent.color = Color.white;       // Màu mặc định trắng, để thẻ <color> quyết định
-            textComponent.text = formattedMessage;   // Gán chuỗi đã định dạng
+            textComponent.richText = true;
+            textComponent.enableVertexGradient = false;
+            textComponent.color = Color.white;
+            textComponent.text = formattedMessage;
             Debug.Log("Đã gán nội dung cho TMP_Text: " + textComponent.text);
         }
         else
@@ -89,7 +107,6 @@ public class ChatUI : MonoBehaviour
 
         messageList.Add(newMessage);
 
-        // Xóa tin nhắn cũ nếu vượt quá giới hạn
         if (messageList.Count > maxMessages)
         {
             GameObject oldMessage = messageList[0];
