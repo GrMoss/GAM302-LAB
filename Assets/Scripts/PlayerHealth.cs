@@ -95,7 +95,7 @@ public class PlayerHealth : NetworkBehaviour
 
         if (HasInputAuthority && livesText != null)
         {
-            livesText.text = $"Lives: {localLives}";
+            livesText.text = localLives.ToString();
             livesText.gameObject.SetActive(true);
         }
         else if (livesText == null)
@@ -140,7 +140,7 @@ public class PlayerHealth : NetworkBehaviour
 
         if (HasInputAuthority && livesText != null)
         {
-            livesText.text = $"Lives: {localLives}";
+            livesText.text = localLives.ToString();
         }
     }
 
@@ -177,7 +177,7 @@ public class PlayerHealth : NetworkBehaviour
 
         if (HasInputAuthority && livesText != null)
         {
-            livesText.text = "Lives: 0";
+            livesText.text = localLives.ToString();
         }
 
         if (HasStateAuthority && playerController != null)
@@ -258,7 +258,7 @@ public class PlayerHealth : NetworkBehaviour
 
         if (HasInputAuthority && livesText != null)
         {
-            livesText.text = $"Lives: {localLives}";
+            livesText.text = localLives.ToString();
         }
 
         if (HasStateAuthority && playerController != null)

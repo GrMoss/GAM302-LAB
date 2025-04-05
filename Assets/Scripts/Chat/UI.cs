@@ -32,4 +32,9 @@ public class UI : MonoBehaviour
             }
         }
     }
+
+    public void OnBoxChat()
+    {
+        chatUI.SetActive(!chatUI.activeSelf);
+    }
 }
