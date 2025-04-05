@@ -17,6 +17,7 @@ public class PlayerHealth : NetworkBehaviour
     [SerializeField] private GameObject healthBar;
     [SerializeField] private Image playerIcon;
     [SerializeField] private GameObject losePanel;
+    [SerializeField] private GameObject winPanel;
     [SerializeField] private TMP_Text livesText;
 
     [Header("Animation")]
@@ -24,7 +25,7 @@ public class PlayerHealth : NetworkBehaviour
 
     private int localLives;
     private Slider healthSlider;
-    private PlayerController playerController; // Thêm tham chiếu đến PlayerController
+    private PlayerController playerController;
 
     public override void Spawned()
     {
@@ -33,7 +34,7 @@ public class PlayerHealth : NetworkBehaviour
         IsRespawning = false;
         localLives = maxLives;
 
-        playerController = GetComponent<PlayerController>(); // Lấy PlayerController
+        playerController = GetComponent<PlayerController>();
 
         if (animator == null)
         {
@@ -87,14 +88,19 @@ public class PlayerHealth : NetworkBehaviour
             losePanel.SetActive(false);
         }
 
-        if (livesText == null)
+        if (winPanel != null)
+        {
+            winPanel.SetActive(false);
+        }
+
+        if (HasInputAuthority && livesText != null)
+        {
+            livesText.text = $"Lives: {localLives}";
+            livesText.gameObject.SetActive(true);
+        }
+        else if (livesText == null)
         {
             Debug.LogWarning($"Player {Object.Id}: Không tìm thấy livesText!");
-        }
-        else
-        {
-            livesText.text = $"{localLives}";
-            livesText.gameObject.SetActive(true);
         }
     }
 
@@ -132,19 +138,31 @@ public class PlayerHealth : NetworkBehaviour
             }
         }
 
-        if (livesText != null)
+        if (HasInputAuthority && livesText != null)
         {
-            livesText.text = $"{localLives}";
+            livesText.text = $"Lives: {localLives}";
         }
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_NotifyGameOver()
     {
-        if (HasInputAuthority && losePanel != null)
+        // Logic từ code mẫu
+        if (HasInputAuthority)
         {
-            losePanel.SetActive(true);
-            Debug.Log($"Player {Object.Id} lost the game!");
+            if (losePanel != null)
+            {
+                losePanel.SetActive(true);
+                Debug.Log($"Player {Object.Id} lost the game!");
+            }
+        }
+        else
+        {
+            if (winPanel != null)
+            {
+                winPanel.SetActive(true);
+                Debug.Log($"Player {Object.Id} wins because another player died!");
+            }
         }
 
         if (animator != null)
@@ -157,14 +175,29 @@ public class PlayerHealth : NetworkBehaviour
             healthBar.SetActive(false);
         }
 
-        if (livesText != null)
+        if (HasInputAuthority && livesText != null)
         {
-            livesText.text = "0";
+            livesText.text = "Lives: 0";
         }
 
-        if (playerController != null)
+        if (HasStateAuthority && playerController != null)
         {
-            playerController.RPC_Die(); // Gọi RPC_Die khi hết mạng
+            playerController.RPC_Die();
+        }
+
+        // Giữ Rpc_NotifyPlayersOfWin như cũ
+        if (HasStateAuthority)
+        {
+            Rpc_NotifyPlayersOfWin(Object.Id);
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_NotifyPlayersOfWin(NetworkId deadPlayerId)
+    {
+        if (!IsDead && HasInputAuthority)
+        {
+            Debug.Log($"Player {Object.Id} nhận thông báo: Player {deadPlayerId} đã chết, bạn còn sống!");
         }
     }
 
@@ -184,9 +217,9 @@ public class PlayerHealth : NetworkBehaviour
             healthBar.SetActive(false);
         }
 
-        if (playerController != null)
+        if (HasStateAuthority && playerController != null)
         {
-            playerController.RPC_Die(); // Gọi RPC_Die khi bắt đầu respawn
+            playerController.RPC_Die();
         }
 
         if (HasStateAuthority)
@@ -223,14 +256,14 @@ public class PlayerHealth : NetworkBehaviour
             }
         }
 
-        if (livesText != null)
+        if (HasInputAuthority && livesText != null)
         {
-            livesText.text = $"{localLives}";
+            livesText.text = $"Lives: {localLives}";
         }
 
-        if (playerController != null)
+        if (HasStateAuthority && playerController != null)
         {
-            playerController.RPC_Respawn(); // Gọi RPC_Respawn khi sống lại
+            playerController.RPC_Respawn();
         }
     }
 
