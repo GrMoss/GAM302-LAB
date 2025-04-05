@@ -511,7 +511,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6114446333544789342
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1469,7 +1469,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 7
+  m_SortingOrder: 11
   m_TargetDisplay: 0
 --- !u!114 &6226028868051094387
 MonoBehaviour:
@@ -2284,6 +2284,7 @@ GameObject:
   - component: {fileID: 6975822354611178346}
   - component: {fileID: 4491061598245828921}
   - component: {fileID: 8610813595762509818}
+  - component: {fileID: 255353017300830353}
   m_Layer: 6
   m_Name: PlayerM
   m_TagString: Player
@@ -2348,6 +2349,7 @@ MonoBehaviour:
   - {fileID: 6975822354611178346}
   - {fileID: 4491061598245828921}
   - {fileID: 8610813595762509818}
+  - {fileID: 255353017300830353}
   ForceRemoteRenderTimeframe: 0
 --- !u!212 &4475155260285061199
 SpriteRenderer:
@@ -2609,7 +2611,7 @@ MonoBehaviour:
   ApplyTiming: 2
   SyncSettings: 79
   StateHashes: 0000000020e23b685928a8ceb23778a5307834201ae6174d48bc6864
-  TriggerHashes: 000000001ae6174d
+  TriggerHashes: 000000002b01f37e
   TotalWords: 2
 --- !u!114 &4491061598245828921
 MonoBehaviour:
@@ -2652,6 +2654,19 @@ MonoBehaviour:
   winPanel: {fileID: 2397716623864317441}
   livesText: {fileID: 959962489125398868}
   animator: {fileID: 896009080796932987}
+--- !u!114 &255353017300830353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7189732288102112542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 280f77147f5964d4c8c9aa922211aaa5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiPlayer: {fileID: 1293285480177997016}
 --- !u!1 &7515788617648240663
 GameObject:
   m_ObjectHideFlags: 0
