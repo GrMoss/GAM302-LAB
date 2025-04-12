@@ -1,71 +1,61 @@
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 using TMPro;
-using System;
-using UnityEngine.UI;
 
 public class FirebaseWebGL : MonoBehaviour
 {
     public static FirebaseWebGL Instance;
-    [SerializeField] private string databaseURL = "https://gam302-lab-default-rtdb.asia-southeast1.firebasedatabase.app/"; 
+    [SerializeField] private string databaseURL = "https://gam302-lab-default-rtdb.asia-southeast1.firebasedatabase.app/";
     [SerializeField] private TMP_Text top5Text;
-
-    [Header("Player Info")]
-    private string playerName;
-    private int playerScore;
 
     private void Awake()
     {
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
+            Debug.LogWarning("[FirebaseWebGL] Đã tồn tại một FirebaseWebGL khác! Hủy instance này.");
             Destroy(gameObject);
+            return;
         }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     private void Start()
     {
-        UpdatePlayerInfo();
-        LoadScores(); 
+        LoadScores();
     }
 
-    private void UpdatePlayerInfo()
+    private void OnDestroy()
     {
-        if (LoginManager.Instance != null)
-        {
-            playerName = LoginManager.Instance.GetPlayerName();
-            playerScore = LoginManager.Instance.GetPlayerScore();
-            Debug.Log($"FirebaseWebGL → Tên: {playerName}, điểm: {playerScore}");
-        }
-        else
-        {
-            Debug.LogWarning("Không tìm thấy LoginManager.Instance");
-        }
+        if (Instance == this) Instance = null;
     }
 
     public void SaveScore()
     {
-        if (string.IsNullOrEmpty(playerName))
+        if (LoginManager.Instance == null)
         {
-            UpdatePlayerInfo();
-        }
-
-        if (string.IsNullOrEmpty(playerName))
-        {
-            Debug.LogError("FirebaseWebGL → playerName bị null hoặc rỗng khi lưu điểm!");
+            Debug.LogError("[FirebaseWebGL] SaveScore thất bại: LoginManager.Instance là null!");
             return;
         }
 
+        string playerName = LoginManager.Instance.GetPlayerName();
+        int playerScore = LoginManager.Instance.GetPlayerScore();
+
+        if (string.IsNullOrEmpty(playerName))
+        {
+            Debug.LogError("[FirebaseWebGL] SaveScore thất bại: playerName rỗng!");
+            return;
+        }
+
+        Debug.Log($"[FirebaseWebGL] Lưu điểm cho {playerName}: {playerScore}");
+
         PlayerData data = new PlayerData(playerName, playerScore);
         string jsonData = JsonUtility.ToJson(data);
-
         StartCoroutine(PostData($"leaderboard/{playerName}.json", jsonData));
     }
 
@@ -84,11 +74,11 @@ public class FirebaseWebGL : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("FirebaseWebGL → Dữ liệu đã được gửi thành công!");
+            Debug.Log("[FirebaseWebGL] Dữ liệu đã được gửi thành công!");
         }
         else
         {
-            Debug.LogError("FirebaseWebGL → Lỗi khi gửi dữ liệu: " + request.error);
+            Debug.LogError($"[FirebaseWebGL] Lỗi khi gửi dữ liệu: {request.error}");
         }
     }
 
@@ -99,7 +89,7 @@ public class FirebaseWebGL : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("FirebaseWebGL → Dữ liệu nhận được: " + request.downloadHandler.text);
+            Debug.Log($"[FirebaseWebGL] Dữ liệu nhận được: {request.downloadHandler.text}");
 
             string json = request.downloadHandler.text;
             if (!string.IsNullOrEmpty(json))
@@ -109,7 +99,6 @@ public class FirebaseWebGL : MonoBehaviour
                     Dictionary<string, PlayerData> leaderboard = JsonConvert.DeserializeObject<Dictionary<string, PlayerData>>(json);
                     List<PlayerData> playerList = new List<PlayerData>(leaderboard.Values);
 
-                    // Sắp xếp giảm dần theo điểm
                     playerList.Sort((a, b) => b.playerScore.CompareTo(a.playerScore));
 
                     string leaderboardText = "___TOP 5 NGƯỜI CHƠI___\n\n";
@@ -125,22 +114,22 @@ public class FirebaseWebGL : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning("FirebaseWebGL → Không tìm thấy TMP_Text để hiển thị bảng xếp hạng.");
+                        Debug.LogWarning("[FirebaseWebGL] Không tìm thấy TMP_Text để hiển thị bảng xếp hạng.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError("FirebaseWebGL → Lỗi giải mã JSON: " + ex.Message);
+                    Debug.LogError($"[FirebaseWebGL] Lỗi giải mã JSON: {ex.Message}");
                 }
             }
             else
             {
-                Debug.LogWarning("FirebaseWebGL → Dữ liệu JSON rỗng.");
+                Debug.LogWarning("[FirebaseWebGL] Dữ liệu JSON rỗng.");
             }
         }
         else
         {
-            Debug.LogError("FirebaseWebGL → Lỗi khi tải dữ liệu: " + request.error);
+            Debug.LogError($"[FirebaseWebGL] Lỗi khi tải dữ liệu: {request.error}");
         }
     }
 }

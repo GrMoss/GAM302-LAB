@@ -10,7 +10,7 @@ public class AppManager : MonoBehaviour
     public static AppManager Instance;
 
     [SerializeField] private NetworkRunner networkRunnerPrefab;
-    [SerializeField] private TextMeshProUGUI statusText; // UI để hiển thị trạng thái
+    [SerializeField] private TextMeshProUGUI statusText; 
 
     private NetworkRunner runner;
 

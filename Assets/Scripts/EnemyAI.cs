@@ -129,13 +129,12 @@ public class EnemyAI : NetworkBehaviour
     {
         if (IsDead) return;
 
-        // Kiểm tra nếu target là người chơi và người chơi đã chết hoặc đang respawn
         if (target != null)
         {
             PlayerHealth targetHealth = target.GetComponent<PlayerHealth>();
             if (targetHealth != null && (targetHealth.IsDead || targetHealth.IsRespawning))
             {
-                target = null; // Hủy mục tiêu nếu người chơi chết hoặc đang respawn
+                target = null;
             }
         }
 
@@ -281,6 +280,10 @@ public class EnemyAI : NetworkBehaviour
 
         if (HasStateAuthority)
         {
+            LoginManager.Instance.AddPlayerScore(1);
+            LoginManager.Instance.AddPlayerGold(10);
+            Debug.Log($"Score: {LoginManager.Instance.GetPlayerScore()}");
+            Debug.Log($"Gold: {LoginManager.Instance.GetPlayerGold()}");
             Debug.Log($"Enemy {Object.Id} died!");
         }
     }

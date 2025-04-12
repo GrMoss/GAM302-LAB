@@ -21,7 +21,8 @@ public class LoginManager : NetworkBehaviour
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private string gameSceneName = "GameScene";
     private string playerName;
-    [Networked] private int playerScore { get; set; }
+    private int playerScore { get; set; }
+    private int playerGold { get; set; }
     public static int indexPlayer;
     public static bool isStart = false;
     public static string PlayerNameStatic { get; private set; }
@@ -60,7 +61,6 @@ public class LoginManager : NetworkBehaviour
 
     public int GetPlayerScore()
     {
-        if (!HasStateAuthority) return 0;
         return playerScore;
     }
 
@@ -68,13 +68,21 @@ public class LoginManager : NetworkBehaviour
     public event Action<int> OnScoreChanged;
     public void AddPlayerScore(int score)
     {
-        if (!HasStateAuthority) return;
         playerScore += score;
         OnScoreChanged?.Invoke(playerScore);
     }
 
+    public int GetPlayerGold()
+    {
+        return playerGold;
+    }
 
-
+    public event Action<int> OnGoldChanged;
+    public void AddPlayerGold(int gold)
+    {
+        playerGold += gold;
+        OnGoldChanged?.Invoke(playerGold);
+    }
 
     private void OnPlayerNameChanged(string name)
     {
