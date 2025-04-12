@@ -12,11 +12,11 @@ public class WeaponController : NetworkBehaviour
     [SerializeField] private float bulletDamage = 20f;
 
     private float nextFireTime;
-    private PlayerController playerController; // Tham chiếu đến PlayerController
+    private PlayerController playerController;
 
     public override void Spawned()
     {
-        playerController = GetComponent<PlayerController>(); // Lấy PlayerController khi spawn
+        playerController = GetComponent<PlayerController>();
         if (playerController == null)
         {
             Debug.LogError($"WeaponController trên {Object.Id} không tìm thấy PlayerController!");
@@ -31,7 +31,6 @@ public class WeaponController : NetworkBehaviour
 
     public void HandleShooting()
     {
-        // Kiểm tra nếu người chơi không còn sống thì không bắn
         if (playerController != null && !playerController.IsAlive) return;
 
         if (Mouse.current != null && Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
@@ -55,7 +54,7 @@ public class WeaponController : NetworkBehaviour
         Bullet bulletScript = bullet.GetComponent<Bullet>();
         if (bulletScript != null)
         {
-            bulletScript.Initialize(direction, bulletSpeed);
+            bulletScript.Initialize(direction, bulletSpeed, GetComponent<NetworkObject>()); 
         }
         else
         {

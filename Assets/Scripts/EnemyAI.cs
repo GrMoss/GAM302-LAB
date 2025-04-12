@@ -14,6 +14,8 @@ public class EnemyAI : NetworkBehaviour
     [SerializeField] private float wanderSpeed = 1.5f;
     [SerializeField] private float wanderRadius = 5f;
     [SerializeField] private Slider healthSlider;
+    [SerializeField] private int scoreReward = 10;
+    [SerializeField] private int goldReward = 5;
 
     private SpriteRenderer spriteRenderer;
     private Animator animator;
@@ -60,7 +62,7 @@ public class EnemyAI : NetworkBehaviour
             healthSlider.gameObject.SetActive(true);
         }
 
-        players = FindObjectsOfType<PlayerController>();
+        UpdatePlayerList();
         lastTargetCheckTime = Runner.SimulationTime;
         lastWanderTime = Runner.SimulationTime;
 
@@ -79,6 +81,7 @@ public class EnemyAI : NetworkBehaviour
 
         if (Runner.SimulationTime - lastTargetCheckTime >= targetCheckInterval)
         {
+            UpdatePlayerList(); // Cập nhật danh sách người chơi
             FindTarget();
             lastTargetCheckTime = Runner.SimulationTime;
         }
@@ -125,6 +128,12 @@ public class EnemyAI : NetworkBehaviour
         }
     }
 
+    private void UpdatePlayerList()
+    {
+        players = FindObjectsOfType<PlayerController>();
+        Debug.Log($"[EnemyAI] Updated player list, found {players.Length} players.");
+    }
+
     private void UpdateState()
     {
         if (IsDead) return;
@@ -153,7 +162,7 @@ public class EnemyAI : NetworkBehaviour
         else
         {
             CurrentState = State.Wandering;
-            target = null; // Đảm bảo target được hủy khi không còn hợp lệ
+            target = null;
         }
     }
 
@@ -216,11 +225,6 @@ public class EnemyAI : NetworkBehaviour
 
     private void FindTarget()
     {
-        if (players == null || players.Length == 0)
-        {
-            players = FindObjectsOfType<PlayerController>();
-        }
-
         float closestDistance = float.MaxValue;
         Transform closestTarget = null;
 
@@ -228,7 +232,6 @@ public class EnemyAI : NetworkBehaviour
         {
             if (player == null || !player.Object.IsValid || !player.gameObject.activeInHierarchy) continue;
 
-            // Kiểm tra trạng thái của PlayerHealth
             PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
             if (playerHealth == null || playerHealth.IsDead || playerHealth.IsRespawning) continue;
 
@@ -242,15 +245,15 @@ public class EnemyAI : NetworkBehaviour
         target = closestTarget;
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, NetworkObject attacker)
     {
         if (IsDead) return;
 
-        RPC_ApplyDamage(damage, transform.position, target != null ? target.position : transform.position);
+        RPC_ApplyDamage(damage, transform.position, attacker != null ? attacker.transform.position : transform.position, attacker);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_ApplyDamage(float damage, Vector3 enemyPos, Vector3 targetPos)
+    private void RPC_ApplyDamage(float damage, Vector3 enemyPos, Vector3 targetPos, NetworkObject attacker)
     {
         if (IsDead) return;
 
@@ -262,12 +265,12 @@ public class EnemyAI : NetworkBehaviour
         }
         else
         {
-            RPC_Die();
+            RPC_Die(attacker);
         }
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_Die()
+    private void RPC_Die(NetworkObject attacker)
     {
         IsDead = true;
         target = null;
@@ -280,11 +283,25 @@ public class EnemyAI : NetworkBehaviour
 
         if (HasStateAuthority)
         {
-            LoginManager.Instance.AddPlayerScore(1);
-            LoginManager.Instance.AddPlayerGold(10);
-            Debug.Log($"Score: {LoginManager.Instance.GetPlayerScore()}");
-            Debug.Log($"Gold: {LoginManager.Instance.GetPlayerGold()}");
             Debug.Log($"Enemy {Object.Id} died!");
+            if (attacker != null)
+            {
+                var playerManager = attacker.GetComponent<PlayerManager>();
+                if (playerManager != null)
+                {
+                    playerManager.RPC_AddScore(scoreReward);
+                    playerManager.RPC_AddGold(goldReward);
+                    Debug.Log($"[EnemyAI] Awarded {scoreReward} score and {goldReward} gold to player {playerManager.PlayerName}");
+                }
+                else
+                {
+                    Debug.LogWarning("[EnemyAI] PlayerManager not found on attacker!");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[EnemyAI] Attacker is null!");
+            }
         }
     }
 
@@ -310,5 +327,15 @@ public class EnemyAI : NetworkBehaviour
                 playerHealth.TakeDamage(contactDamage);
             }
         }
+    }
+
+    internal void TakeDamage(float damage, PlayerRef inputAuthority)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    internal void TakeDamage(float damage)
+    {
+        throw new System.NotImplementedException();
     }
 }

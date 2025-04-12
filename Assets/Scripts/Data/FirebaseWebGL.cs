@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -37,14 +36,16 @@ public class FirebaseWebGL : MonoBehaviour
 
     public void SaveScore()
     {
-        if (LoginManager.Instance == null)
+        // Tìm PlayerManager của người chơi cục bộ
+        var playerManager = FindObjectOfType<PlayerManager>(); // Cần cải thiện để lấy đúng PlayerManager của người chơi
+        if (playerManager == null)
         {
-            Debug.LogError("[FirebaseWebGL] SaveScore thất bại: LoginManager.Instance là null!");
+            Debug.LogError("[FirebaseWebGL] SaveScore thất bại: PlayerManager không tìm thấy!");
             return;
         }
 
-        string playerName = LoginManager.Instance.GetPlayerName();
-        int playerScore = LoginManager.Instance.GetPlayerScore();
+        string playerName = playerManager.PlayerName;
+        int playerScore = playerManager.GetPlayerScore();
 
         if (string.IsNullOrEmpty(playerName))
         {
@@ -101,8 +102,8 @@ public class FirebaseWebGL : MonoBehaviour
 
                     playerList.Sort((a, b) => b.playerScore.CompareTo(a.playerScore));
 
-                    string leaderboardText = "___TOP 5 NGƯỜI CHƠI___\n\n";
-                    int count = Mathf.Min(5, playerList.Count);
+                    string leaderboardText = "___TOP 10 NGƯỜI CHƠI___\n\n";
+                    int count = Mathf.Min(10, playerList.Count);
                     for (int i = 0; i < count; i++)
                     {
                         leaderboardText += $"{i + 1}. {playerList[i].playerName}: {playerList[i].playerScore} điểm\n";

@@ -152,7 +152,6 @@ public class PlayerHealth : NetworkBehaviour
             if (HasStateAuthority && FirebaseWebGL.Instance != null)
             {
                 FirebaseWebGL.Instance.SaveScore();
-                Debug.Log($"[PlayerHealth] Player {Object.Id} thua, lưu điểm: {LoginManager.Instance.GetPlayerScore()}");
             }
         }
         else
@@ -166,7 +165,6 @@ public class PlayerHealth : NetworkBehaviour
             if (HasStateAuthority && FirebaseWebGL.Instance != null)
             {
                 FirebaseWebGL.Instance.SaveScore();
-                Debug.Log($"[PlayerHealth] Player {Object.Id} thắng, lưu điểm: {LoginManager.Instance.GetPlayerScore()}");
             }
         }
 

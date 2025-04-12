@@ -3,17 +3,19 @@ using UnityEngine;
 
 public class Bullet : NetworkBehaviour
 {
-    [Networked] 
+    [Networked]
     private Vector2 Direction { get; set; }
-    [Networked] 
+    [Networked]
     private float Speed { get; set; }
-    [Networked] 
+    [Networked]
     private float SpawnTime { get; set; }
+    [Networked]
+    private NetworkObject Shooter { get; set; } // Lưu người bắn
 
-    [SerializeField] 
+    [SerializeField]
     private float lifetime = 5f;
     [SerializeField]
-    private float damage = 20f; 
+    private float damage = 20f;
 
     public override void Spawned()
     {
@@ -23,10 +25,11 @@ public class Bullet : NetworkBehaviour
         }
     }
 
-    public void Initialize(Vector2 direction, float bulletSpeed)
+    public void Initialize(Vector2 direction, float bulletSpeed, NetworkObject shooter)
     {
         Direction = direction;
         Speed = bulletSpeed;
+        Shooter = shooter;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0, 0, angle);
     }
@@ -52,7 +55,7 @@ public class Bullet : NetworkBehaviour
             EnemyAI enemy = other.GetComponent<EnemyAI>();
             if (enemy != null)
             {
-                enemy.TakeDamage(damage); 
+                enemy.TakeDamage(damage, Shooter);
             }
             Runner.Despawn(Object);
         }

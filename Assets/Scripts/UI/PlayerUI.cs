@@ -2,31 +2,51 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using ExitGames.Client.Photon.StructWrapping;
 
 public class PlayerUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text playerScoreText;
     [SerializeField] private TMP_Text playerGoldText;
 
-    private int playerScore = LoginManager.Instance.GetPlayerScore();
-    private int playerGold = LoginManager.Instance.GetPlayerGold();
+    private PlayerManager playerManager;
+
     private void Start()
     {
-        UpdateUI();
-    }
-    private void Update()
-    {
-        if (LoginManager.Instance.GetPlayerScore() != playerScore || LoginManager.Instance.GetPlayerGold() != playerGold)
+        playerManager = FindObjectOfType<PlayerManager>();
+        if (playerManager != null)
         {
-            playerScore = LoginManager.Instance.GetPlayerScore();
-            playerGold = LoginManager.Instance.GetPlayerGold();
+            playerManager.OnScoreChanged += UpdateScoreUI;
+            playerManager.OnGoldChanged += UpdateGoldUI;
             UpdateUI();
         }
+        else
+        {
+            Debug.LogWarning("[PlayerUI] Không tìm thấy PlayerManager!");
+        }
     }
+
+    private void OnDestroy()
+    {
+        if (playerManager != null)
+        {
+            playerManager.OnScoreChanged -= UpdateScoreUI;
+            playerManager.OnGoldChanged -= UpdateGoldUI;
+        }
+    }
+
+    private void UpdateScoreUI(int score)
+    {
+        playerScoreText.text = score.ToString();
+    }
+
+    private void UpdateGoldUI(int gold)
+    {
+        playerGoldText.text = gold.ToString();
+    }
+
     private void UpdateUI()
     {
-        playerScoreText.text = "Score: " + playerScore;
-        playerGoldText.text = "Gold: " + playerGold;
+        UpdateScoreUI(playerManager.GetPlayerScore());
+        UpdateGoldUI(playerManager.GetPlayerGold());
     }
 }
