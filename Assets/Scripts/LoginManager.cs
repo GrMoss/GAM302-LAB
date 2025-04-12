@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
-public class LoginManager : MonoBehaviour
+public class LoginManager : NetworkBehaviour
 {
     public static LoginManager Instance;
 
@@ -19,9 +19,9 @@ public class LoginManager : MonoBehaviour
     [SerializeField] private TMP_Text debugText;
     [SerializeField] private NetworkRunner networkRunnerPrefab;
     [SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private string gameSceneName = "GameScene"; // Thêm trường để tùy chỉnh tên scene
-
+    [SerializeField] private string gameSceneName = "GameScene";
     private string playerName;
+    [Networked] private int playerScore { get; set; }
     public static int indexPlayer;
     public static bool isStart = false;
     public static string PlayerNameStatic { get; private set; }
@@ -30,6 +30,8 @@ public class LoginManager : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log($"[LoginManager] Awake in scene: {SceneManager.GetActiveScene().name}");
+
         if (Instance == null)
         {
             Instance = this;
@@ -37,6 +39,7 @@ public class LoginManager : MonoBehaviour
         }
         else
         {
+            Debug.LogWarning("LoginManager đã tồn tại! Hủy bản mới.");
             Destroy(gameObject);
             return;
         }
@@ -52,7 +55,26 @@ public class LoginManager : MonoBehaviour
         playerNameInputField.text = "Player" + UnityEngine.Random.Range(1, 1000);
         isStart = false;
         canPlay = false;
+
     }
+
+    public int GetPlayerScore()
+    {
+        if (!HasStateAuthority) return 0;
+        return playerScore;
+    }
+
+
+    public event Action<int> OnScoreChanged;
+    public void AddPlayerScore(int score)
+    {
+        if (!HasStateAuthority) return;
+        playerScore += score;
+        OnScoreChanged?.Invoke(playerScore);
+    }
+
+
+
 
     private void OnPlayerNameChanged(string name)
     {
@@ -86,6 +108,9 @@ public class LoginManager : MonoBehaviour
         }
 
         isStart = true;
+
+        FirebaseWebGL.Instance?.SaveScore();
+
         StartGame(GameMode.Shared);
     }
 
@@ -159,13 +184,16 @@ public class LoginManager : MonoBehaviour
 
     public void Disconnect()
     {
-        if (runner != null)
-        {
+        if (runner == null) return;
+
+        if (runner.IsRunning)
             runner.Shutdown();
-            CleanupRunner();
-            UpdateStatus("Disconnected");
-        }
+
+        CleanupRunner();
+        UpdateStatus("Disconnected");
     }
+
+
 
     private string RandomRoomName()
     {
@@ -181,4 +209,5 @@ public class LoginManager : MonoBehaviour
     {
         return playerName;
     }
+
 }
