@@ -22,30 +22,35 @@ public class FirebaseWebGL : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        Debug.Log("[FirebaseWebGL] Awake: FirebaseWebGL được khởi tạo");
     }
 
     private void Start()
     {
         LoadScores();
+        Debug.Log("[FirebaseWebGL] Start: Gọi LoadScores");
     }
 
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
+        Debug.Log("[FirebaseWebGL] OnDestroy: FirebaseWebGL bị hủy");
     }
 
-    public void SaveScore()
+    public void SaveScore(PlayerManager playerManager)
     {
-        // Tìm PlayerManager của người chơi cục bộ
-        var playerManager = FindObjectOfType<PlayerManager>(); // Cần cải thiện để lấy đúng PlayerManager của người chơi
+        Debug.Log($"[FirebaseWebGL] SaveScore được gọi, playerManager={(playerManager != null ? "OK" : "null")}");
+
         if (playerManager == null)
         {
-            Debug.LogError("[FirebaseWebGL] SaveScore thất bại: PlayerManager không tìm thấy!");
+            Debug.LogError("[FirebaseWebGL] SaveScore thất bại: PlayerManager là null!");
             return;
         }
 
         string playerName = playerManager.PlayerName;
         int playerScore = playerManager.GetPlayerScore();
+
+        Debug.Log($"[FirebaseWebGL] Chuẩn bị lưu điểm: playerName={playerName}, playerScore={playerScore}");
 
         if (string.IsNullOrEmpty(playerName))
         {
@@ -53,10 +58,9 @@ public class FirebaseWebGL : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[FirebaseWebGL] Lưu điểm cho {playerName}: {playerScore}");
-
         PlayerData data = new PlayerData(playerName, playerScore);
         string jsonData = JsonUtility.ToJson(data);
+        Debug.Log($"[FirebaseWebGL] JSON dữ liệu: {jsonData}");
         StartCoroutine(PostData($"leaderboard/{playerName}.json", jsonData));
     }
 
@@ -67,6 +71,7 @@ public class FirebaseWebGL : MonoBehaviour
 
     IEnumerator PostData(string path, string jsonData)
     {
+        Debug.Log($"[FirebaseWebGL] PostData: Gửi yêu cầu PUT tới {databaseURL + path}");
         UnityWebRequest request = UnityWebRequest.Put(databaseURL + path, jsonData);
         request.method = UnityWebRequest.kHttpVerbPUT;
         request.SetRequestHeader("Content-Type", "application/json");
@@ -79,12 +84,13 @@ public class FirebaseWebGL : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"[FirebaseWebGL] Lỗi khi gửi dữ liệu: {request.error}");
+            Debug.LogError($"[FirebaseWebGL] Lỗi khi gửi dữ liệu: {request.error}, ResponseCode={request.responseCode}, URL={databaseURL + path}");
         }
     }
 
     IEnumerator GetDataFromFirebase(string path)
     {
+        Debug.Log($"[FirebaseWebGL] GetDataFromFirebase: Gửi yêu cầu GET tới {databaseURL + path}");
         UnityWebRequest request = UnityWebRequest.Get(databaseURL + path);
         yield return request.SendWebRequest();
 
@@ -112,6 +118,7 @@ public class FirebaseWebGL : MonoBehaviour
                     if (top5Text != null)
                     {
                         top5Text.text = leaderboardText;
+                        Debug.Log("[FirebaseWebGL] Cập nhật top5Text với bảng xếp hạng");
                     }
                     else
                     {
@@ -130,7 +137,7 @@ public class FirebaseWebGL : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"[FirebaseWebGL] Lỗi khi tải dữ liệu: {request.error}");
+            Debug.LogError($"[FirebaseWebGL] Lỗi khi tải dữ liệu: {request.error}, ResponseCode={request.responseCode}");
         }
     }
 }

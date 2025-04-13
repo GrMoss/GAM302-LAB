@@ -8,11 +8,12 @@ public class PlayerUI : MonoBehaviour
     [SerializeField] private TMP_Text playerScoreText;
     [SerializeField] private TMP_Text playerGoldText;
 
-    private PlayerManager playerManager;
+    [SerializeField] private GameObject shopPanel;
+
+    [SerializeField] private PlayerManager playerManager;
 
     private void Start()
     {
-        playerManager = FindObjectOfType<PlayerManager>();
         if (playerManager != null)
         {
             playerManager.OnScoreChanged += UpdateScoreUI;
@@ -22,6 +23,30 @@ public class PlayerUI : MonoBehaviour
         else
         {
             Debug.LogWarning("[PlayerUI] Không tìm thấy PlayerManager!");
+        }
+        
+        if (shopPanel != null)
+        {
+            shopPanel.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("shopUI chưa được gán trong Inspector!");
+        }
+    }
+
+    private void FixedUpdate()
+    {
+           if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (shopPanel != null)
+            {
+                shopPanel.SetActive(!shopPanel.activeSelf);
+            }
+            else
+            {
+                Debug.LogError("shopUI chưa được gán trong Inspector!");
+            }
         }
     }
 
@@ -48,5 +73,10 @@ public class PlayerUI : MonoBehaviour
     {
         UpdateScoreUI(playerManager.GetPlayerScore());
         UpdateGoldUI(playerManager.GetPlayerGold());
+    }
+
+    public void OnBoxShop()
+    {
+        shopPanel.SetActive(!shopPanel.activeSelf);
     }
 }

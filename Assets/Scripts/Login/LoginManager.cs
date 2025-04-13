@@ -64,21 +64,20 @@ public class LoginManager : NetworkBehaviour
         playerName = name;
         PlayerNameStatic = name;
         canPlay = true;
-        Debug.Log("Player name changed to: " + playerName);
     }
 
     private void OnManPlayerButtonClicked()
     {
         indexPlayer = 0;
         canPlay = true;
-        Debug.Log("Nam player selected");
+        UpdateStatus("Player Man selected");
     }
 
     private void OnWomanPlayerButtonClicked()
     {
         indexPlayer = 1;
         canPlay = true;
-        Debug.Log("Nữ player selected");
+        UpdateStatus("Player Woman selected");
     }
 
     private void OnStartButtonClicked()

@@ -1681,6 +1681,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3650246938708182235, guid: e1cd774a1c0694055bbc05df4a7a27cd, type: 3}
+      propertyPath: playerHealth
+      value: 
+      objectReference: {fileID: 8610813595762509818}
+    - target: {fileID: 3650246938708182235, guid: e1cd774a1c0694055bbc05df4a7a27cd, type: 3}
+      propertyPath: playerManager
+      value: 
+      objectReference: {fileID: 6182610491060185698}
+    - target: {fileID: 5672391976716246538, guid: e1cd774a1c0694055bbc05df4a7a27cd, type: 3}
+      propertyPath: playerManager
+      value: 
+      objectReference: {fileID: 6182610491060185698}
     - target: {fileID: 6770014955483347368, guid: e1cd774a1c0694055bbc05df4a7a27cd, type: 3}
       propertyPath: m_Name
       value: Canvas-Player

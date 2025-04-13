@@ -5,6 +5,7 @@ using UnityEngine;
 public class UI : MonoBehaviour
 {
     [SerializeField] private GameObject chatUI;
+    // [SerializeField] private GameObject shopUI;
 
     private void Start()
     {
@@ -16,6 +17,15 @@ public class UI : MonoBehaviour
         {
             Debug.LogError("chatUI chưa được gán trong Inspector!");
         }
+
+        // if (shopUI != null)
+        // {
+        //     shopUI.SetActive(false);
+        // }
+        // else
+        // {
+        //     Debug.LogError("shopUI chưa được gán trong Inspector!");
+        // }
     }
 
     private void Update()
@@ -31,11 +41,26 @@ public class UI : MonoBehaviour
                 Debug.LogError("chatUI chưa được gán trong Inspector!");
             }
         }
+        // if (Input.GetKeyDown(KeyCode.E))
+        // {
+        //     if (shopUI != null)
+        //     {
+        //         shopUI.SetActive(!shopUI.activeSelf);
+        //     }
+        //     else
+        //     {
+        //         Debug.LogError("shopUI chưa được gán trong Inspector!");
+        //     }
+        // }
     }
 
     public void OnBoxChat()
     {
         chatUI.SetActive(!chatUI.activeSelf);
     }
+    // public void OnBoxShop()
+    // {
+    //     shopUI.SetActive(!shopUI.activeSelf);
+    // }
 
 }

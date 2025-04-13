@@ -21,7 +21,7 @@ public class PlayerManager : NetworkBehaviour
         if (HasStateAuthority)
         {
             PlayerName = LoginManager.PlayerNameStatic;
-            Debug.Log($"[PlayerManager] Spawned player {PlayerName}");
+            // Debug.Log($"[PlayerManager] Spawned player {PlayerName}");
         }
     }
 
@@ -39,14 +39,28 @@ public class PlayerManager : NetworkBehaviour
     public void RPC_AddScore(int score)
     {
         PlayerScore += score;
-        Debug.Log($"[PlayerManager] Added {score} score to {PlayerName}, new score: {PlayerScore}");
+        FirebaseWebGL.Instance.SaveScore(this);
+        // Debug.Log($"[PlayerManager] Added {score} score to {PlayerName}, new score: {PlayerScore}");
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_AddGold(int gold)
     {
         PlayerGold += gold;
-        Debug.Log($"[PlayerManager] Added {gold} gold to {PlayerName}, new gold: {PlayerGold}");
+        // Debug.Log($"[PlayerManager] Added {gold} gold to {PlayerName}, new gold: {PlayerGold}");
+    }
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_ReduceGold(int gold)
+    {
+        if (PlayerGold >= gold)
+        {
+            PlayerGold -= gold;
+            // Debug.Log($"[PlayerManager] Reduced {gold} gold from {PlayerName}, new gold: {PlayerGold}");
+        }
+        else
+        {
+            // Debug.LogWarning($"[PlayerManager] Not enough gold to reduce {gold} from {PlayerName}, current gold: {PlayerGold}");
+        }
     }
 
     public int GetPlayerScore()

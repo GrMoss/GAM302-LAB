@@ -1,4 +1,3 @@
-
 using Fusion;
 using TMPro;
 using UnityEngine;
@@ -98,6 +97,19 @@ public class PlayerHealth : NetworkBehaviour
         }
     }
 
+    public void AddLocalLives(int live)
+    {
+        if (HasInputAuthority && livesText != null)
+        {
+            localLives += live;
+            livesText.text = localLives.ToString();
+        }
+        else if (livesText == null)
+        {
+            Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: Không tìm thấy livesText!");
+        }
+    }
+
     public void TakeDamage(float damage)
     {
         if (!HasStateAuthority) return;
@@ -141,17 +153,18 @@ public class PlayerHealth : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_NotifyGameOver()
     {
+        Debug.Log($"[PlayerHealth] Rpc_NotifyGameOver chạy trên Player {Object.Id}, HasInputAuthority={HasInputAuthority}, HasStateAuthority={HasStateAuthority}");
+
         if (HasInputAuthority)
         {
             if (losePanel != null)
             {
                 losePanel.SetActive(true);
-                Debug.Log($"[PlayerHealth] Player {Object.Id} thua!");
+                Debug.Log($"[PlayerHealth] Player {Object.Id} thua, hiển thị losePanel!");
             }
-
-            if (HasStateAuthority && FirebaseWebGL.Instance != null)
+            else
             {
-                FirebaseWebGL.Instance.SaveScore();
+                Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: losePanel là null!");
             }
         }
         else
@@ -159,12 +172,11 @@ public class PlayerHealth : NetworkBehaviour
             if (winPanel != null)
             {
                 winPanel.SetActive(true);
-                Debug.Log($"[PlayerHealth] Player {Object.Id} thắng vì người chơi khác đã chết!");
+                Debug.Log($"[PlayerHealth] Player {Object.Id} thắng, hiển thị winPanel!");
             }
-
-            if (HasStateAuthority && FirebaseWebGL.Instance != null)
+            else
             {
-                FirebaseWebGL.Instance.SaveScore();
+                Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: winPanel là null!");
             }
         }
 
@@ -172,27 +184,79 @@ public class PlayerHealth : NetworkBehaviour
         {
             animator.SetBool("Dead", true);
         }
+        else
+        {
+            Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: animator là null!");
+        }
 
         if (healthBar != null)
         {
             healthBar.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: healthBar là null!");
         }
 
         if (HasInputAuthority && livesText != null)
         {
             livesText.text = localLives.ToString();
         }
+        else if (livesText == null)
+        {
+            Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: livesText là null!");
+        }
 
         if (HasStateAuthority && playerController != null)
         {
             playerController.RPC_Die();
+            Debug.Log($"[PlayerHealth] Player {Object.Id}: Gọi RPC_Die trên PlayerController");
+        }
+        else if (HasStateAuthority)
+        {
+            Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: playerController là null!");
         }
 
         if (HasStateAuthority)
         {
+            Debug.Log($"[PlayerHealth] Player {Object.Id}: Gọi Rpc_SaveAllPlayersScore và Rpc_NotifyPlayersOfWin");
+            // Rpc_SaveAllPlayersScore();
             Rpc_NotifyPlayersOfWin(Object.Id);
         }
     }
+
+    // [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    // private void Rpc_SaveAllPlayersScore()
+    // {
+    //     Debug.Log($"[PlayerHealth] Rpc_SaveAllPlayersScore chạy trên Player {Object.Id}, HasInputAuthority={HasInputAuthority}, IsDead={IsDead}");
+
+    //     // Lưu điểm cho người chơi cục bộ
+    //     if (HasInputAuthority)
+    //     {
+    //         var playerManager = GetComponent<PlayerManager>();
+    //         if (playerManager != null)
+    //         {
+    //             Debug.Log($"[PlayerHealth] Player {Object.Id}: Tìm thấy PlayerManager, PlayerName={playerManager.PlayerName}, Score={playerManager.GetPlayerScore()}");
+    //             if (FirebaseWebGL.Instance != null)
+    //             {
+    //                 Debug.Log($"[PlayerHealth] Player {Object.Id}: Gọi SaveScore cho {playerManager.PlayerName}");
+    //                 FirebaseWebGL.Instance.SaveScore(playerManager);
+    //             }
+    //             else
+    //             {
+    //                 Debug.LogError($"[PlayerHealth] Player {Object.Id}: FirebaseWebGL.Instance là null!");
+    //             }
+    //         }
+    //         else
+    //         {
+    //             Debug.LogError($"[PlayerHealth] Player {Object.Id}: Không tìm thấy PlayerManager!");
+    //         }
+    //     }
+    //     else
+    //     {
+    //         Debug.Log($"[PlayerHealth] Player {Object.Id}: Bỏ qua lưu điểm vì không có InputAuthority");
+    //     }
+    // }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_NotifyPlayersOfWin(NetworkId deadPlayerId)

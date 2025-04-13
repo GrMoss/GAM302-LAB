@@ -131,7 +131,7 @@ public class EnemyAI : NetworkBehaviour
     private void UpdatePlayerList()
     {
         players = FindObjectsOfType<PlayerController>();
-        Debug.Log($"[EnemyAI] Updated player list, found {players.Length} players.");
+        // Debug.Log($"[EnemyAI] Updated player list, found {players.Length} players.");
     }
 
     private void UpdateState()
