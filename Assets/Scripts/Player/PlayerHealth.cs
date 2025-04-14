@@ -27,6 +27,16 @@ public class PlayerHealth : NetworkBehaviour
     private Slider healthSlider;
     private PlayerController playerController;
 
+    private AudioManager audioManager;
+    private void Awake()
+    {
+        audioManager = FindObjectOfType<AudioManager>();
+        if (audioManager == null)
+        {
+            Debug.LogWarning($"[PlayerHealth] Player {Object.Id}: Không tìm thấy AudioManager!");
+        }
+    }
+
     public override void Spawned()
     {
         Health = maxHealth;
@@ -116,6 +126,7 @@ public class PlayerHealth : NetworkBehaviour
 
         Debug.Log($"[PlayerHealth] Player {Object.Id} nhận {damage} sát thương!");
         Health = Mathf.Max(Health - damage, 0);
+        audioManager.Play("PlayerHit");
 
         if (Health <= 0 && !IsRespawning)
         {
@@ -133,12 +144,14 @@ public class PlayerHealth : NetworkBehaviour
             if (localLives > 0)
             {
                 Rpc_StartRespawn();
+                audioManager.Play("PlayerDie");
                 Debug.Log($"[PlayerHealth] Player {Object.Id} mất một mạng, còn {localLives} mạng, đang hồi sinh...");
             }
             else
             {
                 IsDead = true;
                 Rpc_NotifyGameOver();
+                audioManager.Play("GameOver");
                 Invoke(nameof(Die), 0.5f);
                 Debug.Log($"[PlayerHealth] Player {Object.Id} hết mạng!");
             }
@@ -347,6 +360,7 @@ public class PlayerHealth : NetworkBehaviour
         if (!HasStateAuthority) return;
         if (other.CompareTag("Enemy"))
         {
+            audioManager.Play("EnemyAttack");
             TakeDamage(10f);
         }
     }

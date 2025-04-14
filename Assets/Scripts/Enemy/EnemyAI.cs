@@ -36,6 +36,12 @@ public class EnemyAI : NetworkBehaviour
     [Networked] private bool IsHit { get; set; }
     [Networked] private bool IsDead { get; set; }
 
+    private AudioManager audioManager;
+    private void Awake()
+    {
+        audioManager = FindObjectOfType<AudioManager>();
+    }
+
     public override void Spawned()
     {
         Health = maxHealth;
@@ -261,6 +267,7 @@ public class EnemyAI : NetworkBehaviour
         if (Health > 0)
         {
             IsHit = true;
+            audioManager.Play("EnemyHit");
             RPC_KnockBack(enemyPos, targetPos);
         }
         else
@@ -289,6 +296,7 @@ public class EnemyAI : NetworkBehaviour
                 var playerManager = attacker.GetComponent<PlayerManager>();
                 if (playerManager != null)
                 {
+                    audioManager.Play("EnemyDie");
                     playerManager.RPC_AddScore(scoreReward);
                     playerManager.RPC_AddGold(goldReward);
                     Debug.Log($"[EnemyAI] Awarded {scoreReward} score and {goldReward} gold to player {playerManager.PlayerName}");

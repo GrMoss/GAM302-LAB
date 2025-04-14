@@ -10,6 +10,15 @@ public class WeaponController : NetworkBehaviour
     [SerializeField] private float bulletSpeed = 10f;
     [SerializeField] private float fireRate = 0.5f;
     [SerializeField] private float bulletDamage = 20f;
+    private AudioManager audioManager;
+    private void Awake()
+    {
+        audioManager = FindObjectOfType<AudioManager>();
+        if (audioManager == null)
+        {
+            Debug.LogError("AudioManager không tìm thấy trong scene!");
+        }
+    }
 
     private float nextFireTime;
     private PlayerController playerController;
@@ -52,6 +61,7 @@ public class WeaponController : NetworkBehaviour
     {
         NetworkObject bullet = Runner.Spawn(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity, Object.InputAuthority);
         Bullet bulletScript = bullet.GetComponent<Bullet>();
+        audioManager.Play("PlayerAttack");
         if (bulletScript != null)
         {
             bulletScript.Initialize(direction, bulletSpeed, GetComponent<NetworkObject>()); 
